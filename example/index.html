@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <div id="app">test</div>
+  <script type="module">
+    import Vue from '../dist/toy-vue.esm.js'
+    const app = new Vue({
+      el: '#app',
+      data: {
+        name: 'kevin',
+        age: 12,
+        score: {
+          math: 88,
+          english: 99
+        },
+        number: [3, 6, 9]
+      },
+      render() {
+        console.log(`render ~~: age: ${this.age}, score: ${JSON.stringify(this.score)}, number: ${JSON.stringify(this.number)}`)
+      }
+    })
+    console.log(app)
+    window.app = app
+  </script>
+</body>
+</html>
