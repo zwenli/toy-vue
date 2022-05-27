@@ -4,7 +4,7 @@ export function lifecycleMixin(Vue) {
   Vue.prototype._update = function (vnode) {
     const vm = this
     // patch是渲染vnode为真实dom核心
-    patch(vm.$el, vnode)
+    vm.$el = patch(vm.$el, vnode)
   }
 }
 export function mountComponent(vm, el) {
