@@ -28,7 +28,7 @@ function gen(node) {
     while((match = defaultTagRE.exec(text))) {
       // index 表示匹配到的位置
       index = match.index
-      // 处理普通文本，即 {{ 前面的内容
+      // 处理普通文本，即 {{ 前面的内容 
       if (index > lastIndex) {
         tokens.push(JSON.stringify(text.slice(lastIndex, index)))
       }

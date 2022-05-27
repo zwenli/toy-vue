@@ -1,8 +1,7 @@
 import { initState } from './state'
 import { compileToFunctions } from './compiler/index'
+import { mountComponent } from './lifecycle'
 // import { Watcher } from './obserber/watcher'
-
-
 
 export function initMixin(Vue) {
   Vue.prototype._init = function (options) {
@@ -39,5 +38,8 @@ export function initMixin(Vue) {
         options.render = render
       }
     }
+    
+    // 将当前组件实例挂载到真实的el节点上面
+    return mountComponent(vm, el)
   }
 }
