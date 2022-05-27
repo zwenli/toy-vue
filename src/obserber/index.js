@@ -21,7 +21,8 @@ class Obserber {
       this.walk(value)
     }
   }
-  // 对数组进行观测
+  // 对数组进行观测，这里可看出，利用索引直接设置一个数组项时是不能检测到变动的，
+  // 需要改成splice(index, 1, newVal)、或 set(arr, index, newVal)
   observeArray(items) {
     for (let i = 0; i < items.length; i += 1) {
       observe(items[i])

@@ -21,11 +21,11 @@
         },
         number: [3, 6, 9]
       },
-      render() {
-        console.log(`render ~~: age: ${this.age}, score: ${JSON.stringify(this.score)}, number: ${JSON.stringify(this.number)}`)
-      }
+      // render(h) {
+      //   return h('div',{id:'a'},'hello')
+      // },
+      template: `<div id="a" style="width:100px; height:200px;">hello <span>{{age + score.math}}</span></div>`
     })
-    console.log(app)
     window.app = app
   </script>
 </body>
