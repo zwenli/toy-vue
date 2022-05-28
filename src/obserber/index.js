@@ -43,14 +43,27 @@ class Obserber {
 function defineReactive(obj, key, value) {
   const dep = new Dep()
   // 递归关键
+  // childOb就是Observer实例
   let childOb = observe(value)
   Object.defineProperty(obj, key, {
     get: function reactiveGetter() {
       // 依赖收集
       if (Dep.target) {
+        // 如果有watcher dep就会保存watcher 同时watcher也会保存dep
         dep.depend()
         if (childOb) {
+          // 这里表示 属性的值依然是一个对象，包含数组和对象
+          // childOb指代的就是Observer实例对象，里面的dep进行依赖收集
+          // 比如{a:[1,2,3]} 属性a对应的值是一个数组 观测数组的返回值就是对应数组的Observer实例对象
           childOb.dep.depend()
+          if (Array.isArray(childOb)) {
+            // 如果数据结构类似 {a:[1,2,[3,4,[5,6]]]} 这种数组多层嵌套，数组包含数组的情况
+            // 那么我们访问a的时候，只是对第一层的数组进行了依赖收集，里面的数组因为没访问到
+            // 所以没有收集依赖，但是如果我们改变了a里面的第二层数组的值，是需要更新页面的
+            // 所以需要对数组递归进行依赖收集
+            // 如果内部还是数组, 还需要不停的进行依赖收集
+            dependArray(childOb)
+          }
         }
       }
       return value
@@ -65,6 +78,19 @@ function defineReactive(obj, key, value) {
       dep.notify()
     }
   })
+}
+
+// 递归收集数组依赖
+function dependArray(value) {
+  for (let e, i = 0, l = value.length; i < l; i++) {
+    e = value[i]
+    // e.__ob__代表e已经被响应式观测了，把依赖收集到自己的Observer实例的dep里面
+    e && e.__ob__ && e.__ob__.dep.depend()
+    if (Array.isArray(e)) {
+      // 如果数组里面还有数组，继续递归去收集依赖
+      dependArray(e)
+    }
+  }
 }
 
 export function observe(value) {

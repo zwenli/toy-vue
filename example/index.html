@@ -13,20 +13,22 @@
     const app = new Vue({
       el: '#app',
       data: {
-        name: 'kevin',
-        age: 12,
-        score: {
-          math: 88,
-          english: 99
-        },
-        number: [3, 6, 9]
+        a: 1,
+        b: ['x', 'y', 'z', { o: 1, p: 2 }],
       },
       // render(h) {
-      //   return h('div',{id:'a'},'hello')
+      //   return h('div',{id:'a'},_v('hello '+_s(a)))
       // },
-      template: `<div id="a" class="b">hello <span style="color: red; font-weight: bold;">{{age + score.math}}</span></div>`
+      template: `<div id="a">hello {{a}} {{b}}</div>`,
     })
     window.app = app
+    // 模拟更新视图
+    setTimeout(() => {
+      app.a += 1
+      // app.b.unshift('LLL')
+      app.b[app.b.length - 1].p += 1
+      app._update(app._render())
+    }, 2000);
   </script>
 </body>
 </html>
