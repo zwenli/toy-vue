@@ -25,9 +25,9 @@
     // 模拟更新视图
     setTimeout(() => {
       app.a += 1
-      // app.b.unshift('LLL')
+      app.b.splice(3, 0, 'w')
       app.b[app.b.length - 1].p += 1
-      app._update(app._render())
+      // app._update(app._render())
     }, 2000);
   </script>
 </body>

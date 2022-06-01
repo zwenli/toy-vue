@@ -1,7 +1,13 @@
 import { createElement, createTextVNode } from './vdom/index'
+import { nextTick } from './util/next-tick'
 
 export function renderMixin(Vue) {
-  Vue.prototype._render = function () {
+  // 挂载到原型的nextTick方法
+  Vue.prototype.$nextTick = function(fn) {
+    return nextTick(fn, this)
+  }
+  
+  Vue.prototype._render = function() {
     const vm = this
     const { render } = vm.$options
     // 生成vnode -- 虚拟dom

@@ -1,12 +1,13 @@
 import { pushTarget, popTarget } from './dep'
+import { queueWatcher } from './scheduler'
 let uid = 0
 
 export class Watcher {
   constructor(vm, expOrFn, cb, options, isRenderWatcher) {
     this.vm = vm
-    // if (!isRenderWatcher) {
-    //   vm.__watcher = this
-    // }
+    if (isRenderWatcher) {
+      vm.__watcher = this
+    }
     // vm._watchers.push(this)
     this.id = ++uid
     this.cb = cb // 回调函数
@@ -49,7 +50,9 @@ export class Watcher {
   }
   
   update() {
-    this.run()
+    // this.run()
+    // TODO: 根据lazy 判断是否立即执行
+    queueWatcher(this)
   }
   
   run() {
