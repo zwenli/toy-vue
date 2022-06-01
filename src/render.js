@@ -11,13 +11,18 @@ export function renderMixin(Vue) {
     const vm = this
     const { render } = vm.$options
     // 生成vnode -- 虚拟dom
-    const vnode = render.call(vm)
+    const vnode = render.call(vm, vm.$createElement)
     return vnode
   }
+  // vue源码中$createElement 与 _c 是有区别的，前者是用户使用
+  // 后者是template编译中使用
+  Vue.prototype.$createElement = function(a, b, c) {
+    return createElement(a, b, c)
+  }
   
-  Vue.prototype._c = function(...args) {
+  Vue.prototype._c = function(a, b, c) {
     // 创建虚拟dom元素
-    return createElement(...args)
+    return createElement(a, b, c)
   }
   Vue.prototype._v = function(text) {
     // 创建文本节点

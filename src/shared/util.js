@@ -1,3 +1,20 @@
+export function isDef(val) {
+  return val !== undefined && val !== null
+}
+
+export function isUndef(val) {
+  return val === undefined || val === null
+}
+
+export function isPrimitive(value) {
+  return (
+    typeof value === 'string' ||
+    typeof value === 'number' ||
+    typeof value === 'symbol' ||
+    typeof value === 'boolean'
+  )
+}
+
 export function isObject(v) {
   return v !== null && typeof v === 'object'
 }

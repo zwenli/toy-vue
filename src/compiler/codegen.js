@@ -69,7 +69,7 @@ function getChildren(el) {
   const children = el.children
   if (children) {
     // [] or , , 
-    return `${children.map(c => gen(c)).join(',')}`
+    return `[${children.map(c => gen(c)).join(',')}]`
   }
 }
 
