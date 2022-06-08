@@ -25,9 +25,25 @@ export function mountComponent(vm, el) {
   
   // 真实的el选项赋值给实例的$el属性 为之后虚拟dom产生的新的dom替换老的dom做铺垫
   vm.$el = el
+  callHook(vm, 'beforeMount') // 初始渲染之前
   const updateComponent = () => {
     vm._update(vm._render())
   }
   // 渲染wathcer
-  new Watcher(vm, updateComponent, noop, {}, true)
+  new Watcher(vm, updateComponent, noop, {
+    before() {
+      callHook(vm, 'beforeUpdate')
+    }
+  }, true)
+  callHook(vm, 'mounted') // 渲染完成之后
+}
+
+export function callHook(vm, hook) {
+  // 依次执行生命周期对应的方法
+  const handlers = vm.$options[hook]
+  if (handlers) {
+    for (let i = 0; i < handlers.length; i++) {
+      handlers[i].call(vm) // 生命周期里面的this指向当前实例
+    }
+  }
 }

@@ -1,15 +1,20 @@
 import { initState } from './state'
 import { compileToFunctions } from './compiler/index'
-import { mountComponent } from './lifecycle'
+import { mountComponent, callHook } from './lifecycle'
+import { mergeOptions } from './util/options'
 // import { Watcher } from './obserber/watcher'
 
 export function initMixin(Vue) {
   Vue.prototype._init = function (options) {
     const vm = this
     // options 为 new Vue 传入的属性
-    vm.$options = options
+    vm.$options = mergeOptions(vm.constructor.options, options)
+    
+    callHook(vm, 'beforeCreate') //初始化数据之前
     // 初始化状态
     initState(vm)
+    
+    callHook(vm, 'created') //初始化数据之后
     // 如果有el属性，进行渲染
     if (vm.$options.el) {
       vm.$mount(vm.$options.el)

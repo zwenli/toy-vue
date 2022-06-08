@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <div id="app">test</div>
+  <script type="module">
+    import Vue from '../dist/toy-vue.esm.js'
+    Vue.mixin({
+      beforeCreate() {
+        console.log('mixin beforeCreate')
+      },
+      created() {
+        console.log('mixin created')
+      },
+      beforeMount() {
+        console.log('mixin beforeMount')
+      },
+      mounted() {
+        console.log('mixin mounted')
+      },
+      beforeUpdate() {
+        console.log('mixin beforeUpdate')
+      },
+      updated() {
+        console.log('mixin updated')
+      },
+    })
+    const app = new Vue({
+      el: '#app',
+      data: {
+        id: 'test',
+        arr: [
+          { name: 'xx'},
+          { name: 'yy'},
+          { name: 'zz'},
+        ]
+      },
+      beforeCreate() {
+        console.log('app beforeCreate')
+      },
+      created() {
+        console.log('app created')
+      },
+      beforeMount() {
+        console.log('app beforeMount')
+      },
+      mounted() {
+        console.log('app mounted')
+      },
+      beforeUpdate() {
+        console.log('app beforeUpdate')
+      },
+      updated() {
+        console.log('app updated')
+      },
+      render(h) {
+        const child = this.arr.map(item => {
+          return h('li', item.name)
+        })
+        return h('ul', { id: this.id }, child)
+      },
+      // template: `<ul id="a"><li>{{arr[0].name}}</li><li>{{arr[1].name}}</li><li>{{arr[2].name}}</li></ul>`,
+    })
+    window.app = app
+    // 模拟更新视图, template
+    // setTimeout(() => {
+    //   app.arr[0].name = 'xx1'
+    // }, 2000)
+    // render
+    setTimeout(() => {
+      app.arr.push({ name: 'new last'})
+      app.arr.unshift({ name: 'new first'})
+      app.id = 'change'
+    }, 2000)
+  </script>
+</body>
+</html>

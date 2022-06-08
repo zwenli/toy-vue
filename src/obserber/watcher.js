@@ -14,6 +14,9 @@ export class Watcher {
     this.deps = []
     this.depIds = new Set()
     this.options = options
+    if (!options) {
+      this.before = options.before
+    }
     if (typeof expOrFn === 'function') {
       this.getter = expOrFn
     }
