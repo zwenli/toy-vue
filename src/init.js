@@ -1,4 +1,5 @@
 import { initState } from './state'
+import { initRender } from './render'
 import { compileToFunctions } from './compiler/index'
 import { mountComponent, callHook } from './lifecycle'
 import { mergeOptions } from './util/options'
@@ -7,9 +8,10 @@ import { mergeOptions } from './util/options'
 export function initMixin(Vue) {
   Vue.prototype._init = function (options) {
     const vm = this
-    // options 为 new Vue 传入的属性
+    // 合并options，options 为 new Vue 传入的选项对象
     vm.$options = mergeOptions(vm.constructor.options, options)
-    
+
+    initRender(vm)
     callHook(vm, 'beforeCreate') //初始化数据之前
     // 初始化状态
     initState(vm)

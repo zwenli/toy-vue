@@ -1,56 +1,79 @@
-import { isDef } from "../shared/util"
+import { isDef, isUndef } from "../shared/util"
 
 export function patch(oldVnode, vnode) {
-  // 判断传入的oldVnode是否是一个真实dom节点
-  // 关键 初次渲染时，传入的vm.$el 就是传入的el选项，所以是真实dom
-  // 如果不是初始渲染而是视图更新的时候  vm.$el就被替换成了更新之前的老的虚拟dom
-  const isRealElement = oldVnode.nodeType
-  if (isRealElement) {
-    // 这里是初次渲染的逻辑
-    const oleElm = oldVnode
-    const parentElm = oleElm.parentNode
-    // 将虚拟dom转化成真实dom节点
-    const el = createElm(vnode)
-    // 插入到 老的el节点下一个节点的前面 就相当于插入到老的el节点的后面
-    // 这里不直接使用父元素appendChild是为了不破坏替换的位置
-    parentElm.insertBefore(el, oleElm.nextSibling)
-    // 删除老的el节点
-    parentElm.removeChild(oleElm)
-    return el
+  if (isUndef(oldVnode)) {
+    // 空挂载（可能是组件），创建新的根元素
+    createElm(vnode)
   } else {
-    if (oldVnode.tag !== vnode.tag) {
-      // 虚拟dom的tag不同，需要替换
-      const newElm = createElm(vnode)
-      oldVnode.el.parentNode.replaceChild(newElm, oldVnode.el)
-    }
-    
-    // 如果旧节点是个文本节点
-    if (!oldVnode.tag) {
-      if (oldVnode.text !== vnode.text) {
-        oldVnode.el.textContent = vnode.text
+    // 判断传入的oldVnode是否是一个真实dom节点
+    // 关键 初次渲染时，传入的vm.$el 就是传入的el选项，所以是真实dom
+    // 如果不是初始渲染而是视图更新的时候  vm.$el就被替换成了更新之前的老的虚拟dom
+    const isRealElement = oldVnode.nodeType
+    if (isRealElement) {
+      // 这里是初次渲染的逻辑
+      const oleElm = oldVnode
+      const parentElm = oleElm.parentNode
+      // 将虚拟dom转化成真实dom节点
+      const el = createElm(vnode)
+      // 插入到 老的el节点下一个节点的前面 就相当于插入到老的el节点的后面
+      // 这里不直接使用父元素appendChild是为了不破坏替换的位置
+      parentElm.insertBefore(el, oleElm.nextSibling)
+      // 删除老的el节点
+      parentElm.removeChild(oleElm)
+      // return el
+    } else {
+      if (oldVnode.tag !== vnode.tag) {
+        // 虚拟dom的tag不同，需要替换
+        const newElm = createElm(vnode)
+        oldVnode.el.parentNode.replaceChild(newElm, oldVnode.el)
+      }
+      
+      // 如果旧节点是个文本节点
+      if (!oldVnode.tag) {
+        if (oldVnode.text !== vnode.text) {
+          oldVnode.el.textContent = vnode.text
+        }
+      }
+      
+      // 不符合上面两种 代表标签一致 并且不是文本节点
+      // 为了节点复用 所以直接把旧的虚拟dom对应的真实dom赋值给新的虚拟dom的el属性
+      const el = (vnode.el = oldVnode.el)
+      let i
+      // 更新属性
+      updateProperties(vnode, ((i = oldVnode.data) && (i = i.attrs)))
+      const oldCh = oldVnode.children
+      const newCh = vnode.children
+      if (oldCh.length > 0 && newCh.length > 0) {
+        // 新老都存在子节点，需要diff
+        updateChildren(el, oldCh, newCh)
+      } else if (oldCh.length) {
+        // 老的有儿子，新的没有
+        el.innerHTML = ''
+      } else if (newCh.length) {
+        // 新的有儿子，老的没有
+        for (let i = 0; i < newCh.length; i += 1) {
+          const child = newCh[i]
+          el.appendChild(createElm(child))
+        }
       }
     }
-    
-    // 不符合上面两种 代表标签一致 并且不是文本节点
-    // 为了节点复用 所以直接把旧的虚拟dom对应的真实dom赋值给新的虚拟dom的el属性
-    const el = (vnode.el = oldVnode.el)
-    // 更新属性
-    updateProperties(vnode, oldVnode.data)
-    const oldCh = oldVnode.children
-    const newCh = vnode.children
-    if (oldCh.length > 0 && newCh.length > 0) {
-      // 新老都存在子节点，需要diff
-      updateChildren(el, oldCh, newCh)
-    } else if (oldCh.length) {
-      // 老的有儿子，新的没有
-      el.innerHTML = ''
-    } else if (newCh.length) {
-      // 新的有儿子，老的没有
-      for (let i = 0; i < newCh.length; i += 1) {
-        const child = newCh[i]
-        el.appendChild(createElm(child))
-      }
-    }
+  }
+  return vnode.el
+}
+
+// 判断是否是组件Vnode
+function createComponent(vnode) {
+  // 初始化组件
+  // 创建组件实例
+  let i = vnode.data
+  // 下面这句话很关键 调用组件data.hook.init方法进行组件初始化过程
+  // 最终组件的vnode.componentInstance.$el就是组件渲染好的真实dom
+  if ((i = i.hook) && (i = i.init)) {
+    i(vnode)
+  }
+  // 如果组件实例化完毕有componentInstance属性 那证明是组件
+  if (vnode.componentInstance) {
+    return true
   }
 }
 
@@ -59,15 +82,21 @@ function createElm(vnode) {
   const { tag, children, text } = vnode
   //   判断虚拟dom 是元素节点还是文本节点
   if (typeof tag === 'string') {
-    //  虚拟dom的el属性指向真实dom
-    vnode.el = document.createElement(tag)
-    // 解析虚拟dom属性
-    updateProperties(vnode)
-    // 如果有子节点，递归插入到父节点
-    if (children) {
-      children.forEach(child => {
-        vnode.el.appendChild(createElm(child))
-      })
+    // 如果是组件 返回真实组件渲染的真实dom
+    if (createComponent(vnode)) {
+      // return vnode.componentInstance.$el
+      vnode.el = vnode.componentInstance.$el
+    } else {
+      //  虚拟dom的el属性指向真实dom
+      vnode.el = document.createElement(tag)
+      // 解析虚拟dom属性
+      updateProperties(vnode)
+      // 如果有子节点，递归插入到父节点
+      if (children) {
+        children.forEach(child => {
+          vnode.el.appendChild(createElm(child))
+        })
+      }
     }
   } else {
     // 文本节点
@@ -79,7 +108,8 @@ function createElm(vnode) {
 // 解析vnode的data属性 映射到真实dom上
 function updateProperties(vnode, oldProps = {}) {
   const el = vnode.el // 真实节点
-  const newProps = vnode.data || {} // 新的节点属性
+  let i
+  const newProps = ((i = vnode.data) && (i = i.attrs)) || {} // 新的节点属性
   // 如果新的节点没有 需要把老的节点属性移除
   for (let key in oldProps) {
     if (!newProps[key]) {

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>组件</title>
+</head>
+<body>
+  <div id="app">test</div>
+  <script type="module">
+    import Vue from '../dist/toy-vue.esm.js'
+    Vue.component('parent-component', {
+      template: `
+        <div class="parent">
+          <h3>parent component</h3>
+        </div>
+      `
+    })
+    const app = new Vue({
+      el: '#app',
+      data: {
+        id: 'test',
+      },
+      template: `<div id="app"><h1>{{id}}</h1><parent-component></parent-component><child-component></child-component></div>`,
+      components: {
+        'child-component': {
+          template: `
+            <div class="child">
+              <h3>child component</h3>
+            </div>
+          `
+        }
+      }
+    })
+    window.app = app
+    // 模拟更新视图, template
+    setTimeout(() => {
+      app.id = 'change'
+    }, 2000)
+  </script>
+</body>
+</html>

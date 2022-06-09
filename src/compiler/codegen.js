@@ -75,8 +75,18 @@ function getChildren(el) {
 
 export function generate(el) {
   const children = getChildren(el)
-  const code = `_c('${el.tag}',${
-    el.attrs.length ? `${genProps(el.attrs)}` : 'undefined'
-  }${children ? `,${children}` : ''})`
+  const code = `_c('${el.tag}',${genData(el)}${
+    children ? `,${children}` : ''
+  })`
   return code
+}
+
+export function genData(el) {
+  let data = '{'
+  // 只处理了属性
+  if (el.attrs) {
+    data += `attrs:${genProps(el.attrs)},`
+  }
+  data = data.replace(/,$/, '') + '}'
+  return data
 }
