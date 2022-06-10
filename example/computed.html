@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>computed</title>
+</head>
+<body>
+  <div id="app">test</div>
+  <script type="module">
+    import Vue from '../dist/toy-vue.esm.js'
+    const app = new Vue({
+      el: '#app',
+      data: {
+        firstName: 'kevin',
+        lastName: 'zhang'
+      },
+      computed: {
+        fullName() {
+          return this.firstName + ' ' + this.lastName
+        }
+      },
+      template: `<div id="a"><p>first name: {{firstName}}</p><p>last name: {{lastName}}</p><p>full name: {{fullName}}</p></div>`,
+    })
+    window.app = app
+    // 模拟更新视图
+    setTimeout(() => {
+      app.firstName = 'john'
+      app.lastName = 'doe'
+    }, 2000);
+  </script>
+</body>
+</html>

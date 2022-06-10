@@ -1,7 +1,7 @@
 import { observe } from './obserber/index'
 import { noop, isPlainObject, hasOwn, bind } from './shared/util'
 import { Watcher } from './obserber/watcher'
-import { popTarget, pushTarget } from './obserber/dep'
+import { Dep, popTarget, pushTarget } from './obserber/dep'
 
 // 数据代理
 const sharedPropertyDefinition = {
@@ -72,7 +72,55 @@ function initData(vm) {
   observe(data)
 }
 
-function initComputed(vm) {}
+function initComputed(vm) {
+  const computed = vm.$options.computed
+  
+  const watchers = vm._computedWatchers = {} // 用来保存计算属性的watcher
+  
+  for (const key in computed) {
+    const userDef = computed[key]
+    const getter = typeof userDef === 'function' ? userDef : userDef.get
+    // 创建计算watcher，lazy设置为true
+    watchers[key] = new Watcher(vm, getter, noop, { lazy: true })
+    defineComputed(vm, key, userDef)
+  }
+}
+
+// 重新定义计算属性，对get和set劫持
+function defineComputed(vm, key, userDef) {
+  if (typeof userDef === 'function') {
+    sharedPropertyDefinition.get = createComputedGetter(key)
+    sharedPropertyDefinition.set = noop
+  } else {
+    // 用户传入的是对象，需要设置set
+    sharedPropertyDefinition.get = createComputedGetter(key)
+    sharedPropertyDefinition.set = userDef.set || noop
+  }
+  // 利用Object.defineProperty来对计算属性的get和set进行劫持
+  Object.defineProperty(vm, key, sharedPropertyDefinition)
+}
+
+// 重写计算属性的get方法 来判断是否需要进行重新计算
+function createComputedGetter(key) {
+  return function computedGetter() {
+    const vm = this
+    const watcher = vm._computedWatchers && vm._computedWatchers[key]
+    if (watcher) {
+      if (watcher.dirty) {
+        // 计算属性取值的时候，如果是脏的，需要重新求值
+        // 但此时是没有触发到视图更新的，也就是数据改变了，视图没有更新
+        watcher.evaluate()
+      }
+      // 因此需要手动收集依赖，把计算属性的依赖项也添加渲染 watcher 的依赖
+      if (Dep.target) {
+        // 如果Dep还存在target，这个时候一般为渲染watcher，计算属性依赖的数据也需要收集
+        watcher.depend()
+        // 让计算属性依赖的值收集一遍外层的渲染watcher，这样子当计算属性依赖的值改变了既可以重新计算又可以刷新视图
+      }
+      return watcher.value
+    }
+  }
+}
 
 function initWatch(vm) {
   const watch = vm.$options.watch

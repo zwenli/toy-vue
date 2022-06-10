@@ -27,3 +27,12 @@ initGlobalApi方法主要用来注册Vue的全局方法
 ### 渲染组件真实dom
 如果判断Vnode 是属于组件，那么把渲染好的组件真实dom（vnode.componentInstance.$el）挂载到 vnode.el上
 并返回
+
+## 计算属性原理
+
+计算属性的主要特征是，如果计算属性依赖的值不发生变化，页面更新时不会重新计算，计算结果会被缓存起来。
+
+### 计算属性初始化
+### 对计算属性进行属性劫持
+### Watcher的改造，lazy，dirty 
+### 外层 （渲染）watcher的依赖收集
