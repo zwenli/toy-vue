@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <div id="app">test</div>
+  <script type="module">
+    import Vue from '../dist/toy-vue.esm.js'
+    const app = new Vue({
+      el: '#app',
+      data: {
+        a: 1,
+        b: {
+          ba: 1,
+          bb: 2,
+        },
+      },
+      template: `<div id="a">hello {{a}} {{b}}</div>`,
+      watch: {
+        a: function (newVal, oldVal) {
+          console.log('a changed', newVal, oldVal)
+          console.log('this: ', this)
+        },
+        // 对象
+        b: {
+          handler: function (newVal, oldVal) {
+            console.log('b changed', newVal, oldVal)
+          },
+          deep: true,
+        },
+        // 方法名
+        'b.bb': 'handlebb',
+        // 数组
+        'b.ba': [
+          {
+            handler: function (newVal, oldVal) {
+              console.log('b.ba changed', newVal, oldVal)
+            },
+            immediate: true,
+          }
+        ]
+      },
+      methods: {
+        handlebb(newVal, oldVal) {
+          console.log('b.bb changed', newVal, oldVal)
+        }
+      }
+    })
+    window.app = app
+    // 模拟更新视图
+    setTimeout(() => {
+      app.a += 1
+      app.b.ba = 3
+      app.b.bb = 5
+    }, 2000);
+  </script>
+</body>
+</html>

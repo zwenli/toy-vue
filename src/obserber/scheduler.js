@@ -18,7 +18,7 @@ function flushSchedulerQueue() {
     watcher.run()
 
     const vm = watcher.vm
-    if (vm.__watcher === watcher) {
+    if (vm._watcher === watcher) {
       callHook(vm, 'updated')
     }
   }

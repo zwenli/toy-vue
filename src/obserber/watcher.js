@@ -1,28 +1,40 @@
 import { pushTarget, popTarget } from './dep'
 import { queueWatcher } from './scheduler'
+import { parsePath } from '../util/lang'
 let uid = 0
 
 export class Watcher {
   constructor(vm, expOrFn, cb, options, isRenderWatcher) {
     this.vm = vm
     if (isRenderWatcher) {
-      vm.__watcher = this
+      vm._watcher = this
     }
-    // vm._watchers.push(this)
+    vm._watchers.push(this)
+    // this.options = options
+    if (options) {
+      this.deep = !!options.deep
+      this.lazy = !!options.lazy
+      this.user = !!options.user
+      this.sync = !!options.sync
+      this.before = options.before
+    } else {
+      this.deep = this.lazy = this.user = this.sync = false
+    }
     this.id = ++uid
     this.cb = cb // 回调函数
     this.deps = []
     this.depIds = new Set()
-    this.options = options
-    if (!options) {
-      this.before = options.before
-    }
+    // getter 的表达式解析
     if (typeof expOrFn === 'function') {
+      // 传入的表达式是函数
       this.getter = expOrFn
+    } else {
+      // 也可以是字符串，形如'a.b.c'
+      this.getter = parsePath(expOrFn)
     }
-    // 实例化就会默认调用get方法
+    // 实例化就会默认调用get方法，get即为取值操作，进行依赖收集的过程
     // 实际会根据lazy判断是否立即执行 get()
-    this.value = this.get()
+    this.value = this.lazy ? undefined : this.get()
   }
 
   get() {
@@ -35,6 +47,7 @@ export class Watcher {
       // 这个方法在render函数执行的时候会取值 从而实现依赖收集
       value = this.getter.call(vm, vm)
     } finally {
+      // TODO: deep 的处理
       // 在调用方法之后把当前watcher实例从全局Dep.target移除
       popTarget()
     }
@@ -63,7 +76,12 @@ export class Watcher {
     const value = this.get()
     const oldValue = this.value
     this.value = value
-    if (typeof this.cb === 'function') {
+    if (this.user) {
+      // 用户watcher
+      // TODO: 源码中有异常逻辑处理，这里忽略
+      this.cb.apply(vm, [value, oldValue])
+    } else {
+      // 渲染watcher
       this.cb.call(vm, value, oldValue)
     }
   }
