@@ -49,7 +49,7 @@ if (typeof Promise !== 'undefined' && isNative(Promise)) {
 }
 
 /**
- * 
+ * vue 实现异步更新的核心
  * @param {Function} cb 
  * @param {?object} ctx 
  */

@@ -1,4 +1,4 @@
-import { isPlainObject, hasOwn, isObject } from '../shared/util'
+import { isPlainObject, hasOwn, isObject, isValidArrayIndex } from '../shared/util'
 import { Dep } from './dep'
 import { arrayMethods } from './array'
 class Obserber {
@@ -37,6 +37,21 @@ class Obserber {
       defineReactive(obj, key, value)
     }
   }
+}
+
+export function observe(value) {
+  // 非对象值不进行观测
+  if (!isObject(value)) {
+    return
+  }
+  let ob
+  // 如果已经是观测的，直接返回
+  if (hasOwn(value, '__ob__') && value.__ob__ instanceof Obserber) {
+    ob = value.__ob__
+  } else if (isPlainObject(value) || Array.isArray(value)) {
+    ob = new Obserber(value)
+  }
+  return ob
 }
 
 // 数据劫持核心
@@ -80,6 +95,49 @@ function defineReactive(obj, key, value) {
   })
 }
 
+export function set(target, key, val) {
+  // 如果是数组，直接调用重写的splice方法，可以刷新视图
+  if (Array.isArray(target) && isValidArrayIndex(key)) {
+    target.length = Math.max(target.length, key)
+    target.splice(key, 1, val)
+    return val
+  }
+  // 如果是对象本身的属性，则直接添加即可
+  if (key in target && !(key in Object.prototype)) {
+    target[key] = val
+    return val
+  }
+  const ob = target.__ob__
+  // 对象本身就不是响应式，不需要将其定义成响应式属性
+  if (!ob) {
+    target[key] = val
+    return val
+  }
+  // 将新增的属性定义为响应式的
+  defineReactive(target, key, val)
+  ob.dep.notify()
+  return val
+}
+
+export function del(target, key) {
+  // 如果是数组，调用splice，原理set
+  if (Array.isArray(target) && isValidArrayIndex(key)) {
+    target.splice(key, 1)
+    return
+  }
+  const ob = target.__ob__
+  // 对象本身不存在这个属性，不需要任何处理
+  if (!hasOwn(target, key)) {
+    return
+  }
+  delete target[key]
+  // 如果对象不是响应式的，直接返回，无需派发更新
+  if (!ob) {
+    return
+  }
+  ob.dep.notify()
+}
+
 // 递归收集数组依赖
 function dependArray(value) {
   for (let e, i = 0, l = value.length; i < l; i++) {
@@ -91,19 +149,4 @@ function dependArray(value) {
       dependArray(e)
     }
   }
-}
-
-export function observe(value) {
-  // 非对象值不进行观测
-  if (!isObject(value)) {
-    return
-  }
-  let ob
-  // 如果已经是观测的，直接返回
-  if (hasOwn(value, '__ob__') && value.__ob__ instanceof Obserber) {
-    ob = value.__ob__
-  } else if (isPlainObject(value) || Array.isArray(value)) {
-    ob = new Obserber(value)
-  }
-  return ob
 }
